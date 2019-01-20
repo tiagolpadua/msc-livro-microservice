@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -32,11 +33,11 @@ public class LivrosController {
 		return listaLivros;
 	}
 
-	@GetMapping("/{livroId}")
-	public Livro getLivroPorId(@PathVariable Long livroId) {
-		logger.info("getLivroPorId: " + livroId);
-		return listaLivros.stream().filter(l -> l.getId().equals(livroId)).findFirst()
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado"));
+	@GetMapping("/{id}")
+	public Livro getLivroPorId(@PathVariable Long id) {
+		logger.info("getLivroPorId: " + id);
+		return listaLivros.stream().filter(l -> l.getId().equals(id)).findFirst()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
 	}
 
 	@PostMapping
@@ -49,5 +50,18 @@ public class LivrosController {
 		
 		logger.info("adicionarLivro: " + livro + " adicionado com sucesso");
 		return livro;
+	}
+	
+	@PutMapping("/{id}")
+	public Livro atualizarLivro(@RequestBody Livro livro, @PathVariable Long id) {
+		logger.info("atualizarLivro: " + livro + " id: " + id);
+		Livro livroSalvo = listaLivros.stream().filter(l -> l.getId().equals(id)).findFirst()
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
+		
+		livroSalvo.setAutor(livro.getAutor());
+		livroSalvo.setPreco(livro.getPreco());
+		livroSalvo.setTitulo(livro.getTitulo());
+
+		return livroSalvo;
 	}
 }
