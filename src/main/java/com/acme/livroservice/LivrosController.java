@@ -22,6 +22,7 @@ public class LivrosController {
 
 	@RequestMapping("/livros/{livroId}")
 	public Livro getLivroPorId(@PathVariable Long livroId) {
-		return listaLivros.stream().filter(l -> l.getId().equals(livroId)).findFirst().orElse(null);
+		return listaLivros.stream().filter(l -> l.getId().equals(livroId)).findFirst()
+				.orElseThrow(() -> new LivroNaoEncontradoException());
 	}
 }
