@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,5 +64,16 @@ public class LivrosController {
 		livroSalvo.setTitulo(livro.getTitulo());
 
 		return livroSalvo;
+	}
+	
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void excluirLivro(@PathVariable Long id) {
+		logger.info("excluirLivro: " + id);
+		
+		Livro livro = listaLivros.stream().filter(l -> l.getId().equals(id)).findFirst()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
+		
+		listaLivros.remove(livro);
 	}
 }
