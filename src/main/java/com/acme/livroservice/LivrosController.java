@@ -3,6 +3,7 @@ package com.acme.livroservice;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +23,12 @@ public class LivrosController {
 		livros.add(l3);
 		
 		return livros;
+	}
+	
+	@RequestMapping("/livros/{livroId}")
+	public Livro getLivroPorId(@PathVariable Long livroId) {
+		System.out.println("livroId: " + livroId);
+		Livro l = new Livro(1l, "Don Quixote", "Miguel de Cervantes", 144.0);
+		return l;
 	}
 }
