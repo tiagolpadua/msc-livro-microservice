@@ -50,4 +50,9 @@ public class Livro {
 		this.preco = preco;
 	}
 
+	@Override
+	public String toString() {
+		return "Livro [id=" + id + ", autor=" + autor + ", titulo=" + titulo + ", preco=" + preco + "]";
+	}
+
 }
