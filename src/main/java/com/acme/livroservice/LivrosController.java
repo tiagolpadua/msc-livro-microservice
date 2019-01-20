@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,7 +21,7 @@ public class LivrosController {
 	@Resource
 	private ArrayList<Livro> listaLivros;
 
-	@GetMapping()
+	@GetMapping
 	public List<Livro> getLivros() {
 		return listaLivros;
 	}
@@ -31,8 +32,8 @@ public class LivrosController {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado"));
 	}
 	
-	@PostMapping()
-	public void adicionarLivro(Livro livro) {
+	@PostMapping
+	public void adicionarLivro(@RequestBody Livro livro) {
 		System.out.println("Função adicionarLivro acionada");
 	}
 }
