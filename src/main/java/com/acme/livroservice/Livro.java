@@ -1,7 +1,12 @@
 package com.acme.livroservice;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+@Entity
 public class Livro {
-	private Long id;
+	private @Id @GeneratedValue Long id;
 	private String autor;
 	private String titulo;
 	private Double preco;
@@ -13,6 +18,13 @@ public class Livro {
 	public Livro(Long id, String autor, String titulo, Double preco) {
 		super();
 		this.id = id;
+		this.autor = autor;
+		this.titulo = titulo;
+		this.preco = preco;
+	}
+	
+	public Livro(String autor, String titulo, Double preco) {
+		super();
 		this.autor = autor;
 		this.titulo = titulo;
 		this.preco = preco;

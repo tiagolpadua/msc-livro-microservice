@@ -1,11 +1,7 @@
 package com.acme.livroservice;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,71 +24,50 @@ public class LivrosController {
 
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
-	@Resource
-	private ArrayList<Livro> listaLivros;
+	private final LivroRepository repository;
+	
+	LivrosController(LivroRepository repository) {
+		this.repository = repository;
+	}
 
 	@GetMapping
 	public List<Livro> getLivros(@RequestParam("autor") Optional<String> autor,
 			@RequestParam("titulo") Optional<String> titulo) {
 		logger.info("getLivros - autor: " + autor.orElse("Não informado") + " titulo: " + titulo.orElse("Não informado"));
 
-		List<Livro> listaRetorno = listaLivros;
-
-		if (autor.isPresent()) {
-			listaRetorno = listaRetorno.stream()
-					.filter(l -> l.getAutor().toUpperCase().contains(autor.get().toUpperCase()))
-					.collect(Collectors.toList());
-		}
-		
-		if (titulo.isPresent()) {
-			listaRetorno = listaRetorno.stream()
-					.filter(l -> l.getTitulo().toUpperCase().contains(titulo.get().toUpperCase()))
-					.collect(Collectors.toList());
-		}
-
-		return listaRetorno;
+		return repository.findAll();
 	}
 
 	@GetMapping("/{id}")
 	public Livro getLivroPorId(@PathVariable Long id) {
 		logger.info("getLivroPorId: " + id);
-		return listaLivros.stream().filter(l -> l.getId().equals(id)).findFirst()
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
+		return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public Livro adicionarLivro(@RequestBody Livro livro) {
 		logger.info("adicionarLivro: " + livro);
-		Long max = listaLivros.stream().mapToLong(l -> l.getId()).max().orElse(0);
-		livro.setId(max + 1);
-		listaLivros.add(livro);
-
-		logger.info("adicionarLivro: " + livro + " adicionado com sucesso");
-		return livro;
+		return repository.save(livro);		
 	}
 
 	@PutMapping("/{id}")
 	public Livro atualizarLivro(@RequestBody Livro livro, @PathVariable Long id) {
 		logger.info("atualizarLivro: " + livro + " id: " + id);
-		Livro livroSalvo = listaLivros.stream().filter(l -> l.getId().equals(id)).findFirst()
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
-
-		livroSalvo.setAutor(livro.getAutor());
-		livroSalvo.setPreco(livro.getPreco());
-		livroSalvo.setTitulo(livro.getTitulo());
-
-		return livroSalvo;
+		return repository.findById(id)
+				.map(livroSalvo -> {
+					livroSalvo.setAutor(livro.getAutor());
+					livroSalvo.setTitulo(livro.getTitulo());
+					livroSalvo.setPreco(livro.getPreco());
+					return repository.save(livroSalvo);
+				})
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));		
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivro(@PathVariable Long id) {
-		logger.info("excluirLivro: " + id);
-
-		Livro livro = listaLivros.stream().filter(l -> l.getId().equals(id)).findFirst()
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
-
-		listaLivros.remove(livro);
+		logger.info("excluirLivro: " + id);		
+		repository.deleteById(id);
 	}
 }
