@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class LivrosController {
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
 	private final LivroRepository repository;
-	
+
 	LivrosController(LivroRepository repository) {
 		this.repository = repository;
 	}
@@ -33,41 +34,50 @@ public class LivrosController {
 	@GetMapping
 	public List<Livro> getLivros(@RequestParam("autor") Optional<String> autor,
 			@RequestParam("titulo") Optional<String> titulo) {
-		logger.info("getLivros - autor: " + autor.orElse("Não informado") + " titulo: " + titulo.orElse("Não informado"));
+		logger.info(
+				"getLivros - autor: " + autor.orElse("Não informado") + " titulo: " + titulo.orElse("Não informado"));
 
-		return repository.findAll();
+		if (autor.isPresent()) {
+			return repository.findAll(LivroRepository.autorContem(autor.get()));
+		} else if (titulo.isPresent()) {
+			return repository.findAll(LivroRepository.tituloContem(titulo.get()));
+		} else if (autor.isPresent() && titulo.isPresent()) {
+			return repository.findAll(
+					Specification.where(LivroRepository.autorContem(autor.get())).and(LivroRepository.tituloContem(titulo.get())));
+		} else {
+			return repository.findAll();			
+		}
 	}
 
 	@GetMapping("/{id}")
 	public Livro getLivroPorId(@PathVariable Long id) {
 		logger.info("getLivroPorId: " + id);
-		return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
+		return repository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public Livro adicionarLivro(@RequestBody Livro livro) {
 		logger.info("adicionarLivro: " + livro);
-		return repository.save(livro);		
+		return repository.save(livro);
 	}
 
 	@PutMapping("/{id}")
 	public Livro atualizarLivro(@RequestBody Livro livro, @PathVariable Long id) {
 		logger.info("atualizarLivro: " + livro + " id: " + id);
-		return repository.findById(id)
-				.map(livroSalvo -> {
-					livroSalvo.setAutor(livro.getAutor());
-					livroSalvo.setTitulo(livro.getTitulo());
-					livroSalvo.setPreco(livro.getPreco());
-					return repository.save(livroSalvo);
-				})
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));		
+		return repository.findById(id).map(livroSalvo -> {
+			livroSalvo.setAutor(livro.getAutor());
+			livroSalvo.setTitulo(livro.getTitulo());
+			livroSalvo.setPreco(livro.getPreco());
+			return repository.save(livroSalvo);
+		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivro(@PathVariable Long id) {
-		logger.info("excluirLivro: " + id);		
+		logger.info("excluirLivro: " + id);
 		repository.deleteById(id);
 	}
 }
