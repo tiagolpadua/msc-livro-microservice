@@ -21,7 +21,6 @@ public class Receiver {
 //    public void receiveMessage(String message) throws InterruptedException {
 //    	logger.info("Recebeu <" + message + ">");
 //         TimeUnit.SECONDS.sleep(3);
-//        // repository.save(livro);
 //         logger.info("Processou <" + message + ">");
 //    }
 
