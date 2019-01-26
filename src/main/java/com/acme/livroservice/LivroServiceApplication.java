@@ -5,8 +5,11 @@ import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -36,21 +39,52 @@ public class LivroServiceApplication {
     public Binding binding(Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
     }
-
+    
     @Bean
-    public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
-            MessageListenerAdapter listenerAdapter) {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(QUEUE_NAME);
-        container.setMessageListener(listenerAdapter);
-        return container;
+    public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory, MessageConverter producerJackson2MessageConverter) {
+        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(producerJackson2MessageConverter);
+        return rabbitTemplate;
+    }
+    
+    @Bean
+    public Jackson2JsonMessageConverter producerJackson2MessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 
-    @Bean
-    MessageListenerAdapter listenerAdapter(Receiver receiver) {
-        return new MessageListenerAdapter(receiver, "receiveMessage");
-    }
+//    @Bean
+//    public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
+//            MessageListenerAdapter listenerAdapter) {
+//        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+//        container.setConnectionFactory(connectionFactory);
+//        container.setQueueNames(QUEUE_NAME);
+//        container.setMessageListener(listenerAdapter);
+//        return container;
+//    }
+    
+//    @Bean
+//    public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory, MessageConverter producerJackson2MessageConverter) {
+//        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+//        rabbitTemplate.setMessageConverter(producerJackson2MessageConverter());
+////        rabbitTemplate.setMessageConverter(jsonMessageConverter);
+//        return rabbitTemplate;
+//
+//    }
+     
+//    @Bean
+//    public Jackson2JsonMessageConverter producerJackson2MessageConverter() {
+//        return new Jackson2JsonMessageConverter();
+//    }
+//    
+//    @Bean
+//    public MessageConverter jsonMessageConverter(){
+//        return new Jackson2JsonMessageConverter();
+//    }
+
+//    @Bean
+//    MessageListenerAdapter listenerAdapter(Receiver receiver) {
+//        return new MessageListenerAdapter(receiver, "receiveMessage");
+//    }
     
 	public static void main(String[] args) {
 		SpringApplication.run(LivroServiceApplication.class, args);
