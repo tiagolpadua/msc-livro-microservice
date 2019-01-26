@@ -2,6 +2,7 @@ package com.acme.livroservice;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,16 @@ public class LivrosController {
 	public Livro adicionarLivro(@RequestBody Livro livro) {
 		logger.info("adicionarLivro: " + livro);
 		return repository.save(livro);
+	}
+	
+	@PostMapping("/demorado")
+	@ResponseStatus(HttpStatus.CREATED)
+	public Livro adicionarLivroDemorado(@RequestBody Livro livro) throws InterruptedException {
+		logger.info("adicionarLivroDemorado iniciou: " + livro);
+		TimeUnit.SECONDS.sleep(3);
+		Livro livroSalvo = repository.save(livro);
+		logger.info("adicionarLivroDemorado terminou: " + livroSalvo);
+		return livroSalvo;
 	}
 
 	@PutMapping("/{id}")
