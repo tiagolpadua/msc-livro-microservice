@@ -78,11 +78,18 @@ public class LivrosController {
 		return livroSalvo;
 	}
 	
+//	@PostMapping("/assincrono")
+//	@ResponseStatus(HttpStatus.CREATED)
+//	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
+//		logger.info("adicionarLivroAssincrono iniciou: " + livro);
+//		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY, livro.toString());
+//	}
+	
 	@PostMapping("/assincrono")
 	@ResponseStatus(HttpStatus.CREATED)
 	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
 		logger.info("adicionarLivroAssincrono iniciou: " + livro);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY, livro.toString());
+		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY, livro);
 	}
 
 	@PutMapping("/{id}")
