@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Receiver {
-	
+
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
-    private final LivroRepository repository;
+	private final LivroRepository repository;
 
-    Receiver(LivroRepository repository) {
+	Receiver(LivroRepository repository) {
 		this.repository = repository;
 	}
 
@@ -23,13 +23,12 @@ public class Receiver {
 //        // repository.save(livro);
 //         logger.info("Processou <" + message + ">");
 //    }
-    
-    public void receiveMessage(Livro livro) throws InterruptedException {
-    	logger.info("Recebeu <" + livro.toString() + ">");
-         TimeUnit.SECONDS.sleep(3);
-        // repository.save(livro);
-         logger.info("Processou <" + livro.toString() + ">");
-    }
-    
+
+	public void receiveMessage(Livro livro) throws InterruptedException {
+		logger.info("Recebeu <" + livro.toString() + ">");
+		TimeUnit.SECONDS.sleep(3);
+		repository.save(livro);
+		logger.info("Processou <" + livro.toString() + ">");
+	}
 
 }
