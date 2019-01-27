@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 class LoadDatabase {
 
-	Logger logger = LoggerFactory.getLogger(LivrosController.class);
+	Logger logger = LoggerFactory.getLogger(LoadDatabase.class);
 
 	@Bean
 	public CommandLineRunner initDatabase(LivroRepository repository) {
