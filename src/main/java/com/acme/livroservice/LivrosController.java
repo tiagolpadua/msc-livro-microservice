@@ -7,6 +7,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -55,6 +58,7 @@ public class LivrosController {
 	}
 
 	@GetMapping("/{id}")
+	@Cacheable(value = "livros", key = "#id")
 	public Livro getLivroPorId(@PathVariable Long id) {
 		logger.info("getLivroPorId: " + id);
 		return repository.findById(id)
@@ -94,6 +98,7 @@ public class LivrosController {
 	}
 
 	@PutMapping("/{id}")
+	@CachePut(value = "livros", key = "#livro.id")
 	public Livro atualizarLivro(@RequestBody Livro livro, @PathVariable Long id) {
 		logger.info("atualizarLivro: " + livro + " id: " + id);
 		return repository.findById(id).map(livroSalvo -> {
@@ -105,6 +110,7 @@ public class LivrosController {
 	}
 
 	@DeleteMapping("/{id}")
+	@CacheEvict(value = "livros", allEntries=true)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivro(@PathVariable Long id) {
 		logger.info("excluirLivro: " + id);

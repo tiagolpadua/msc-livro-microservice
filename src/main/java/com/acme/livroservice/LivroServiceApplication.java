@@ -10,11 +10,13 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableCaching
 public class LivroServiceApplication {
 
 	static final String TOPIC_EXCHANGE_NAME = "livro-service-exchange";
@@ -67,9 +69,8 @@ public class LivroServiceApplication {
 //    MessageListenerAdapter listenerAdapter(Receiver receiver) {
 //        return new MessageListenerAdapter(receiver, "receiveMessage");
 //    }
-    
+
 	public static void main(String[] args) {
 		SpringApplication.run(LivroServiceApplication.class, args);
 	}
-
 }
