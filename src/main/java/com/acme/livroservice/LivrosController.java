@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -42,16 +45,21 @@ public class LivrosController {
 		} else if (titulo.isPresent()) {
 			return repository.findAll(LivroRepository.tituloContem(titulo.get()));
 		} else if (autor.isPresent() && titulo.isPresent()) {
-			return repository.findAll(
-					Specification.where(LivroRepository.autorContem(autor.get())).and(LivroRepository.tituloContem(titulo.get())));
+			return repository.findAll(Specification.where(LivroRepository.autorContem(autor.get()))
+					.and(LivroRepository.tituloContem(titulo.get())));
 		} else {
-			return repository.findAll();			
+			return repository.findAll();
 		}
 	}
 
 	@GetMapping("/{id}")
 	public Livro getLivroPorId(@PathVariable Long id) {
 		logger.info("getLivroPorId: " + id);
+//		try {
+//			Thread.sleep(5000);
+//		} catch (InterruptedException ex) {
+//			Thread.currentThread().interrupt();
+//		}
 		return repository.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
 	}
@@ -78,6 +86,19 @@ public class LivrosController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivro(@PathVariable Long id) {
 		logger.info("excluirLivro: " + id);
+
+		RestTemplate restTemplate = new RestTemplate();
+		String avaliacaoResourceUrl = "http://localhost:8081/avaliacoes/livro/";
+
+		try {
+			restTemplate.delete(avaliacaoResourceUrl + id);
+			logger.info("Avaliações vinculadas excluídas com sucesso");
+		} catch (ResourceAccessException | HttpClientErrorException ex) {
+			logger.error("Ocorreu um erro na comunicação com o serviço de avaliações", ex);
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+					"Ocorreu um erro não esperado na comunicação com o serviço de livros: " + ex.getMessage());
+		}
+
 		repository.deleteById(id);
 	}
 }
