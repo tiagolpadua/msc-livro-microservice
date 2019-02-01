@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -31,7 +34,7 @@ public class LivrosController {
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
 	private final LivroRepository repository;
-	
+
 	private final RabbitTemplate rabbitTemplate;
 
 	LivrosController(LivroRepository repository, RabbitTemplate rabbitTemplate) {
@@ -50,10 +53,10 @@ public class LivrosController {
 		} else if (titulo.isPresent()) {
 			return repository.findAll(LivroRepository.tituloContem(titulo.get()));
 		} else if (autor.isPresent() && titulo.isPresent()) {
-			return repository.findAll(
-					Specification.where(LivroRepository.autorContem(autor.get())).and(LivroRepository.tituloContem(titulo.get())));
+			return repository.findAll(Specification.where(LivroRepository.autorContem(autor.get()))
+					.and(LivroRepository.tituloContem(titulo.get())));
 		} else {
-			return repository.findAll();			
+			return repository.findAll();
 		}
 	}
 
@@ -71,7 +74,7 @@ public class LivrosController {
 		logger.info("adicionarLivro: " + livro);
 		return repository.save(livro);
 	}
-	
+
 	@PostMapping("/demorado")
 	@ResponseStatus(HttpStatus.CREATED)
 	public Livro adicionarLivroDemorado(@RequestBody Livro livro) throws InterruptedException {
@@ -81,7 +84,7 @@ public class LivrosController {
 		logger.info("adicionarLivroDemorado terminou: " + livroSalvo);
 		return livroSalvo;
 	}
-	
+
 //	@PostMapping("/assincrono")
 //	@ResponseStatus(HttpStatus.CREATED)
 //	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
@@ -89,12 +92,13 @@ public class LivrosController {
 //		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY, livro.toString());
 //		logger.info("adicionarLivroAssincrono terminou");
 //	}
-	
+
 	@PostMapping("/assincrono")
 	@ResponseStatus(HttpStatus.CREATED)
 	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
 		logger.info("adicionarLivroAssincrono iniciou: " + livro);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY, livro);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY,
+				livro);
 	}
 
 	@PutMapping("/{id}")
@@ -110,10 +114,23 @@ public class LivrosController {
 	}
 
 	@DeleteMapping("/{id}")
-	@CacheEvict(value = "livros", allEntries=true)
+	@CacheEvict(value = "livros", allEntries = true)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivro(@PathVariable Long id) {
 		logger.info("excluirLivro: " + id);
+
+		RestTemplate restTemplate = new RestTemplate();
+		String avaliacaoResourceUrl = "http://localhost:8081/avaliacoes/livro/";
+
+		try {
+			restTemplate.delete(avaliacaoResourceUrl + id);
+			logger.info("Avaliações vinculadas excluídas com sucesso");
+		} catch (ResourceAccessException | HttpClientErrorException ex) {
+			logger.error("Ocorreu um erro na comunicação com o serviço de avaliações", ex);
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+					"Ocorreu um erro não esperado na comunicação com o serviço de livros: " + ex.getMessage());
+		}
+
 		repository.deleteById(id);
 	}
 }
