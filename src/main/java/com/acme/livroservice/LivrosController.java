@@ -10,7 +10,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,10 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/livros")
@@ -33,13 +28,13 @@ public class LivrosController {
 
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
-	private final LivroRepository repository;
-
 	private final RabbitTemplate rabbitTemplate;
+	
+	private final LivroService livroService;
 
-	LivrosController(LivroRepository repository, RabbitTemplate rabbitTemplate) {
-		this.repository = repository;
+	LivrosController(RabbitTemplate rabbitTemplate, LivroService livroService) {
 		this.rabbitTemplate = rabbitTemplate;
+		this.livroService = livroService;
 	}
 
 	@GetMapping
@@ -48,31 +43,21 @@ public class LivrosController {
 		logger.info(
 				"getLivros - autor: " + autor.orElse("Não informado") + " titulo: " + titulo.orElse("Não informado"));
 
-		if (autor.isPresent()) {
-			return repository.findAll(LivroRepository.autorContem(autor.get()));
-		} else if (titulo.isPresent()) {
-			return repository.findAll(LivroRepository.tituloContem(titulo.get()));
-		} else if (autor.isPresent() && titulo.isPresent()) {
-			return repository.findAll(Specification.where(LivroRepository.autorContem(autor.get()))
-					.and(LivroRepository.tituloContem(titulo.get())));
-		} else {
-			return repository.findAll();
-		}
+		return livroService.getLivros(autor, titulo);
 	}
 
 	@GetMapping("/{id}")
 	@Cacheable(value = "livros", key = "#id")
 	public Livro getLivroPorId(@PathVariable Long id) {
 		logger.info("getLivroPorId: " + id);
-		return repository.findById(id)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
+		return livroService.getLivroPorId(id);
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public Livro adicionarLivro(@RequestBody Livro livro) {
 		logger.info("adicionarLivro: " + livro);
-		return repository.save(livro);
+		return livroService.adicionarLivro(livro);
 	}
 
 	@PostMapping("/demorado")
@@ -80,7 +65,7 @@ public class LivrosController {
 	public Livro adicionarLivroDemorado(@RequestBody Livro livro) throws InterruptedException {
 		logger.info("adicionarLivroDemorado iniciou: " + livro);
 		TimeUnit.SECONDS.sleep(3);
-		Livro livroSalvo = repository.save(livro);
+		Livro livroSalvo = livroService.adicionarLivro(livro);
 		logger.info("adicionarLivroDemorado terminou: " + livroSalvo);
 		return livroSalvo;
 	}
@@ -105,12 +90,7 @@ public class LivrosController {
 	@CachePut(value = "livros", key = "#livro.id")
 	public Livro atualizarLivro(@RequestBody Livro livro, @PathVariable Long id) {
 		logger.info("atualizarLivro: " + livro + " id: " + id);
-		return repository.findById(id).map(livroSalvo -> {
-			livroSalvo.setAutor(livro.getAutor());
-			livroSalvo.setTitulo(livro.getTitulo());
-			livroSalvo.setPreco(livro.getPreco());
-			return repository.save(livroSalvo);
-		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livro não encontrado: " + id));
+		return livroService.atualizarLivro(livro, id);
 	}
 
 	@DeleteMapping("/{id}")
@@ -118,19 +98,6 @@ public class LivrosController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivro(@PathVariable Long id) {
 		logger.info("excluirLivro: " + id);
-
-		RestTemplate restTemplate = new RestTemplate();
-		String avaliacaoResourceUrl = "http://localhost:8081/avaliacoes/livro/";
-
-		try {
-			restTemplate.delete(avaliacaoResourceUrl + id);
-			logger.info("Avaliações vinculadas excluídas com sucesso");
-		} catch (ResourceAccessException | HttpClientErrorException ex) {
-			logger.error("Ocorreu um erro na comunicação com o serviço de avaliações", ex);
-			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-					"Ocorreu um erro não esperado na comunicação com o serviço de livros: " + ex.getMessage());
-		}
-
-		repository.deleteById(id);
+		livroService.excluirLivro(id);
 	}
 }
