@@ -22,14 +22,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 @RestController
 @RequestMapping("/livros")
+@Api
 public class LivrosController {
 
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
 	private final RabbitTemplate rabbitTemplate;
-	
+
 	private final LivroService livroService;
 
 	LivrosController(RabbitTemplate rabbitTemplate, LivroService livroService) {
@@ -37,6 +41,7 @@ public class LivrosController {
 		this.livroService = livroService;
 	}
 
+	@ApiOperation(value = "Lista livros", produces = "application/json")
 	@GetMapping
 	public List<Livro> getLivros(@RequestParam("autor") Optional<String> autor,
 			@RequestParam("titulo") Optional<String> titulo) {
