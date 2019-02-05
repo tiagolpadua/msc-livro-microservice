@@ -87,8 +87,9 @@ public class LivrosController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
 		logger.info("adicionarLivroAssincrono iniciou: " + livro);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY,
-				livro);
+//		rabbitTemplate.convertAndSend(LivroServiceApplication.TOPIC_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY,
+//				livro);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.DIRECT_EXCHANGE_NAME, LivroServiceApplication.ROUTING_KEY, livro);
 	}
 
 	@PutMapping("/{id}")

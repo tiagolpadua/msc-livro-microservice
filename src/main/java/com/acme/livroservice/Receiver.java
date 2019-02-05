@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("disabled")
+// @Profile("disabled")
 public class Receiver {
 
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
