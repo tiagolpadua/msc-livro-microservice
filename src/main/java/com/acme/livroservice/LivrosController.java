@@ -81,7 +81,7 @@ public class LivrosController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
 		logger.info("adicionarLivroAssincrono iniciou: " + livro);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.CADASTRAR_LIVRO_QUEUE_NAME, LivroServiceApplication.CADASTRAR_LIVRO_ROUTING_KEY, livro);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_DIRECT_EXCHANGE_NAME, LivroServiceApplication.CADASTRAR_LIVRO_ROUTING_KEY, livro);
         logger.info("adicionarLivroAssincrono terminou");
 	}
 
@@ -107,7 +107,7 @@ public class LivrosController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivroAssincrono(@PathVariable Long id) {
 		logger.info("excluirLivroAssincrono iniciou: " + id);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.EXCLUIR_LIVRO_QUEUE_NAME, LivroServiceApplication.EXCLUIR_LIVRO_ROUTING_KEY, id);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_DIRECT_EXCHANGE_NAME, LivroServiceApplication.EXCLUIR_LIVRO_ROUTING_KEY, id);
         logger.info("excluirLivroAssincrono terminou");
 	}
 }
