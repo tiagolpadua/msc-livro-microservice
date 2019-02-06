@@ -19,6 +19,7 @@ public class LivroServiceApplication {
 	static final String MATRICULA = "NNNNNNNN";
 	static final String LIVRO_DIRECT_EXCHANGE_NAME = "livro-direct-exchange-" + MATRICULA;
 	static final String LIVRO_FANOUT_EXCHANGE_NAME = "livro-fanout-exchange";
+	static final String LIVRO_TOPIC_EXCHANGE_NAME = "livro-topic-exchange";
 	static final String CADASTRAR_LIVRO_QUEUE_NAME = "cadastrar_livro_queue_" + MATRICULA;
 	static final String CADASTRAR_LIVRO_ROUTING_KEY = "livro.cadastrar." + MATRICULA;
 
@@ -26,18 +27,28 @@ public class LivroServiceApplication {
 	static final String EXCLUIR_LIVRO_ROUTING_KEY = "livro.excluir." + MATRICULA;
 
 	@Bean
-	public Queue queue() {
+	public Queue cadastrarLivroQueue() {
 		return new Queue(CADASTRAR_LIVRO_QUEUE_NAME);
 	}
 
 	@Bean
-	public FanoutExchange exchange() {
+	public FanoutExchange fanoutExchange() {
 		return new FanoutExchange(LIVRO_FANOUT_EXCHANGE_NAME);
 	}
 
 	@Bean
-	public Binding binding(Queue queue, FanoutExchange exchange) {
-		return BindingBuilder.bind(queue).to(exchange);
+	public Binding fanoutBinding(Queue cadastrarLivroQueue, FanoutExchange fanoutExchange) {
+		return BindingBuilder.bind(cadastrarLivroQueue).to(fanoutExchange);
+	}
+
+	@Bean
+	public TopicExchange topicExchange() {
+		return new TopicExchange(LIVRO_TOPIC_EXCHANGE_NAME);
+	}
+
+	@Bean
+	public Binding topicBinding(Queue cadastrarLivroQueue, TopicExchange topicExchange) {
+		return BindingBuilder.bind(cadastrarLivroQueue).to(topicExchange).with(CADASTRAR_LIVRO_ROUTING_KEY);
 	}
 
 	@Bean
