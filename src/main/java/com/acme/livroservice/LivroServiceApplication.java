@@ -15,6 +15,9 @@ public class LivroServiceApplication {
 	static final String LIVRO_DIRECT_EXCHANGE_NAME = "livro-direct-exchange-" + MATRICULA;
 	static final String CADASTRAR_LIVRO_QUEUE_NAME = "cadastrar_livro_queue_" + MATRICULA;
 	static final String CADASTRAR_LIVRO_ROUTING_KEY = "livro.cadastrar." + MATRICULA;
+	
+	static final String EXCLUIR_LIVRO_QUEUE_NAME = "excluir_livro_queue_" + MATRICULA;
+	static final String EXCLUIR_LIVRO_ROUTING_KEY = "livro.excluir." + MATRICULA;
 
 	@Bean
 	public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory,

@@ -102,4 +102,12 @@ public class LivrosController {
 		logger.info("excluirLivro: " + id);
 		repository.deleteById(id);
 	}
+	
+	@DeleteMapping("/assincrono/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void excluirLivroAssincrono(@PathVariable Long id) {
+		logger.info("excluirLivroAssincrono iniciou: " + id);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.EXCLUIR_LIVRO_QUEUE_NAME, LivroServiceApplication.EXCLUIR_LIVRO_ROUTING_KEY, id);
+        logger.info("excluirLivroAssincrono terminou");
+	}
 }

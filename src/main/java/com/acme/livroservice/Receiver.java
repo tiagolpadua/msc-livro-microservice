@@ -24,4 +24,12 @@ public class Receiver {
 		repository.save(livro);
 		logger.info("Processou <" + livro.toString() + ">");
 	}
+	
+	@RabbitListener(queues = LivroServiceApplication.EXCLUIR_LIVRO_QUEUE_NAME)
+	public void receiveMessageExcluirLivro(Long id) throws InterruptedException {
+		logger.info("Recebeu para exclusão id: <" + id + ">");
+		TimeUnit.SECONDS.sleep(3);
+		repository.deleteById(id);
+		logger.info("Processou exclusão do id: <" + id + ">");
+	}
 }
