@@ -46,10 +46,10 @@ public class LivrosController {
 		} else if (titulo.isPresent()) {
 			return repository.findAll(LivroRepository.tituloContem(titulo.get()));
 		} else if (autor.isPresent() && titulo.isPresent()) {
-			return repository.findAll(
-					Specification.where(LivroRepository.autorContem(autor.get())).and(LivroRepository.tituloContem(titulo.get())));
+			return repository.findAll(Specification.where(LivroRepository.autorContem(autor.get()))
+					.and(LivroRepository.tituloContem(titulo.get())));
 		} else {
-			return repository.findAll();			
+			return repository.findAll();
 		}
 	}
 
@@ -66,7 +66,7 @@ public class LivrosController {
 		logger.info("adicionarLivro: " + livro);
 		return repository.save(livro);
 	}
-	
+
 	@PostMapping("/demorado")
 	@ResponseStatus(HttpStatus.CREATED)
 	public Livro adicionarLivroDemorado(@RequestBody Livro livro) throws InterruptedException {
@@ -76,13 +76,22 @@ public class LivrosController {
 		logger.info("adicionarLivroDemorado terminou: " + livroSalvo);
 		return livroSalvo;
 	}
-	
+
 	@PostMapping("/assincrono")
 	@ResponseStatus(HttpStatus.CREATED)
 	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
 		logger.info("adicionarLivroAssincrono iniciou: " + livro);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_DIRECT_EXCHANGE_NAME, LivroServiceApplication.CADASTRAR_LIVRO_ROUTING_KEY, livro);
-        logger.info("adicionarLivroAssincrono terminou");
+		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_DIRECT_EXCHANGE_NAME,
+				LivroServiceApplication.CADASTRAR_LIVRO_ROUTING_KEY, livro);
+		logger.info("adicionarLivroAssincrono terminou");
+	}
+
+	@PostMapping("/multicast")
+	@ResponseStatus(HttpStatus.CREATED)
+	public void adicionarLivroMulticast(@RequestBody Livro livro) throws InterruptedException {
+		logger.info("adicionarLivroMulticast iniciou: " + livro);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_FANOUT_EXCHANGE_NAME, livro);
+		logger.info("adicionarLivroMulticast terminou");
 	}
 
 	@PutMapping("/{id}")
@@ -102,12 +111,13 @@ public class LivrosController {
 		logger.info("excluirLivro: " + id);
 		repository.deleteById(id);
 	}
-	
+
 	@DeleteMapping("/assincrono/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluirLivroAssincrono(@PathVariable Long id) {
 		logger.info("excluirLivroAssincrono iniciou: " + id);
-		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_DIRECT_EXCHANGE_NAME, LivroServiceApplication.EXCLUIR_LIVRO_ROUTING_KEY, id);
-        logger.info("excluirLivroAssincrono terminou");
+		rabbitTemplate.convertAndSend(LivroServiceApplication.LIVRO_DIRECT_EXCHANGE_NAME,
+				LivroServiceApplication.EXCLUIR_LIVRO_ROUTING_KEY, id);
+		logger.info("excluirLivroAssincrono terminou");
 	}
 }
