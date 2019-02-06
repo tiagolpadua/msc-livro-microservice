@@ -1,11 +1,16 @@
 package com.acme.livroservice;
 
+import java.io.Serializable;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
-public class Livro {
+public class Livro implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
+	
 	private @Id @GeneratedValue Long id;
 	private String autor;
 	private String titulo;

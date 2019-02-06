@@ -11,10 +11,17 @@ import org.springframework.stereotype.Component;
 public class Receiver {
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
+	private final LivroRepository repository;
+
+	Receiver(LivroRepository repository) {
+		this.repository = repository;
+	}
+
 	@RabbitListener(queues = LivroServiceApplication.CADASTRAR_LIVRO_QUEUE_NAME)
-    public void receiveMessageCadastrarLivro(String message) throws InterruptedException {
-    	logger.info("Recebeu <" + message + ">");
-         TimeUnit.SECONDS.sleep(3);
-         logger.info("Processou <" + message + ">");
-    }
+	public void receiveMessageCadastrarLivro(Livro livro) throws InterruptedException {
+		logger.info("Recebeu <" + livro.toString() + ">");
+		TimeUnit.SECONDS.sleep(3);
+		repository.save(livro);
+		logger.info("Processou <" + livro.toString() + ">");
+	}
 }
