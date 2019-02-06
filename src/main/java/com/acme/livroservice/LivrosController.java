@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,9 +28,11 @@ public class LivrosController {
 	Logger logger = LoggerFactory.getLogger(LivrosController.class);
 
 	private final LivroRepository repository;
+	private final RabbitTemplate rabbitTemplate;
 
-	LivrosController(LivroRepository repository) {
+	LivrosController(LivroRepository repository, RabbitTemplate rabbitTemplate) {
 		this.repository = repository;
+		this.rabbitTemplate = rabbitTemplate;
 	}
 
 	@GetMapping
@@ -72,6 +75,14 @@ public class LivrosController {
 		Livro livroSalvo = repository.save(livro);
 		logger.info("adicionarLivroDemorado terminou: " + livroSalvo);
 		return livroSalvo;
+	}
+	
+	@PostMapping("/assincrono")
+	@ResponseStatus(HttpStatus.CREATED)
+	public void adicionarLivroAssincrono(@RequestBody Livro livro) throws InterruptedException {
+		logger.info("adicionarLivroAssincrono iniciou: " + livro);
+		rabbitTemplate.convertAndSend(LivroServiceApplication.CADASTRAR_LIVRO_QUEUE_NAME, LivroServiceApplication.CADASTRAR_LIVRO_ROUTING_KEY, livro.toString());
+        logger.info("adicionarLivroAssincrono terminou");
 	}
 
 	@PutMapping("/{id}")
